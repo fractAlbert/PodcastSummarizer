@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""
+Podcast Transcription Script
+
+Splits an audio file into overlapping chunks, transcribes each chunk using the
+Google Gemini API, stitches the results into a single transcript, and removes
+the temporary audio fragments when done.
+
+Requirements:
+    pip install google-generativeai
+    ffmpeg installed and available in PATH  (https://ffmpeg.org)
+
+Usage:
+    python transcribe_episode.py "path\to\audio.mp3" "path\to\output.txt"
+
+    Examples:
+    python transcribe_episode.py audio.mp3 "podcasts\ESA\Transcripts\Episode 118 - Title.txt"
+    python transcribe_episode.py audio.mp3 "podcasts\1 Player Podcast\Transcripts\1P_401_Title.txt"
+
+API Key:
+    Set the GOOGLE_API_KEY environment variable before running, or pass --api-key.
+"""
+
+import json
+import os
+import sys
+import time
+import argparse
+import subprocess
+import tempfile
+from pathlib import Path
+
+import google.generativeai as genai
+
+# ── Configuration ──────────────────────────────────────────────────────────────
+CHUNK_MINUTES = 12
+OVERLAP_SECONDS = 30
+MODEL = "gemini-2.0-flash"
+
+TRANSCRIPTION_PROMPT = """\
+You are a transcription assistant for a podcast.
+
+Transcribe this audio clip word-for-word. Format each speaker change like this:
+[HH:MM:SS] Speaker Name: [what they said]
+
+Example:
+[00:00:15] Host: Welcome to the podcast.
+[00:01:02] Guest: Thanks for having me.
+
+Rules:
+- Transcribe every word spoken; include filler words (um, uh) if clearly audible
+- Do not paraphrase or summarize — capture everything said
+- If a word is inaudible, write [inaudible]
+- This clip may begin or end mid-sentence; transcribe whatever audio is present
+"""
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def get_duration(path: Path) -> float:
+    result = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", str(path)],
+        capture_output=True, text=True, check=True,
+    )
+    data = json.loads(result.stdout)
+    for stream in data["streams"]:
+        if "duration" in stream:
+            return float(stream["duration"])
+    raise ValueError(f"Could not read duration from {path}")
+
+
+def split_audio(audio_path: Path, chunk_dir: Path) -> list[tuple[Path, float, float]]:
+    """Split audio into overlapping chunks. Returns list of (chunk_path, start_sec, end_sec)."""
+    duration = get_duration(audio_path)
+    chunk_sec = CHUNK_MINUTES * 60
+    chunks = []
+    start = 0.0
+    n = 1
+
+    while start < duration:
+        content_end = min(start + chunk_sec, duration)
+        clip_end = min(content_end + OVERLAP_SECONDS, duration)
+
+        chunk_path = chunk_dir / f"chunk_{n:03d}.mp3"
+        subprocess.run(
+            [
+                "ffmpeg", "-y",
+                "-i", str(audio_path),
+                "-ss", str(start),
+                "-t", str(clip_end - start),
+                "-acodec", "libmp3lame", "-q:a", "4",
+                str(chunk_path),
+            ],
+            capture_output=True, check=True,
+        )
+
+        chunks.append((chunk_path, start, clip_end))
+        start = content_end
+        n += 1
+
+    return chunks, duration
+
+
+def transcribe_chunk(model, chunk_path: Path, num: int, total: int) -> str:
+    print(f"  Uploading chunk {num}/{total}...", flush=True)
+    uploaded = genai.upload_file(str(chunk_path))
+
+    while uploaded.state.name == "PROCESSING":
+        time.sleep(3)
+        uploaded = genai.get_file(uploaded.name)
+
+    if uploaded.state.name != "ACTIVE":
+        raise RuntimeError(f"Upload failed for chunk {num} (state: {uploaded.state.name})")
+
+    print(f"  Transcribing chunk {num}/{total}...", flush=True)
+    response = model.generate_content([uploaded, TRANSCRIPTION_PROMPT])
+
+    genai.delete_file(uploaded.name)
+    return response.text
+
+
+def stitch(transcripts: list[str]) -> str:
+    """Join consecutive transcripts, removing duplicated text from overlapping audio."""
+    if not transcripts:
+        return ""
+
+    result = transcripts[0]
+
+    for curr in transcripts[1:]:
+        window = 400
+        tail = result[-window:]
+        head = curr[:window]
+
+        tail_words = tail.split()
+        head_words = head.split()
+
+        join_point = None
+        for seq_len in range(min(25, len(tail_words), len(head_words)), 4, -1):
+            for ti in range(len(tail_words) - seq_len + 1):
+                seq = tail_words[ti : ti + seq_len]
+                for hi in range(len(head_words) - seq_len + 1):
+                    if head_words[hi : hi + seq_len] == seq:
+                        join_point = (" ".join(seq), ti, hi)
+                        break
+                if join_point:
+                    break
+            if join_point:
+                break
+
+        if join_point:
+            phrase, _, hi = join_point
+            head_char = head.find(phrase)
+            overlap_start_in_result = len(result) - window + tail.find(phrase)
+            result = result[:overlap_start_in_result].rstrip() + "\n" + curr[head_char:].lstrip()
+        else:
+            result = result.rstrip() + "\n\n" + curr.lstrip()
+
+    return result
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Transcribe a podcast episode via Google Gemini API")
+    parser.add_argument("audio_file", help="Path to the audio file (mp3, m4a, wav, etc.)")
+    parser.add_argument("output_file", nargs="?", help="Output .txt path (default: same name as audio)")
+    parser.add_argument("--api-key", help="Google API key (overrides GOOGLE_API_KEY env var)")
+    parser.add_argument("--model", default=MODEL, help=f"Gemini model (default: {MODEL})")
+    args = parser.parse_args()
+
+    audio_path = Path(args.audio_file).resolve()
+    if not audio_path.exists():
+        sys.exit(f"Error: File not found: {audio_path}")
+
+    api_key = args.api_key or os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        sys.exit("Error: Set the GOOGLE_API_KEY environment variable or pass --api-key.")
+
+    output_path = (
+        Path(args.output_file).resolve() if args.output_file else audio_path.with_suffix(".txt")
+    )
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(args.model)
+
+    print(f"Audio:  {audio_path.name}")
+    print(f"Output: {output_path}")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+
+        print("Splitting audio into chunks...")
+        chunks, duration = split_audio(audio_path, tmp_dir)
+        print(
+            f"Duration: {duration / 60:.1f} min  →  {len(chunks)} chunk(s) "
+            f"of ~{CHUNK_MINUTES} min each (with {OVERLAP_SECONDS}s overlap)"
+        )
+
+        transcripts = []
+        for i, (chunk_path, start_sec, _) in enumerate(chunks, 1):
+            t = transcribe_chunk(model, chunk_path, i, len(chunks))
+            transcripts.append(t)
+            print(f"  Chunk {i} complete.", flush=True)
+
+    print("Stitching transcript...", flush=True)
+    full_transcript = stitch(transcripts)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(full_transcript, encoding="utf-8")
+    print(f"\nDone. Transcript saved to:\n  {output_path}")
+
+
+if __name__ == "__main__":
+    main()

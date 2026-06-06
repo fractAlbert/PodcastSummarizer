@@ -1,0 +1,12 @@
+# Each podcast folder is its own independent git repo
+podcasts/
+
+# Audio files
+*.mp3
+*.m4a
+*.wav
+*.aiff
+*.aac
+*.ogg
+*.flac
+*.wma
