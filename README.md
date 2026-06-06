@@ -67,9 +67,25 @@ The output folder is created automatically if it doesn't exist. The audio file i
 
 ## Adding a New Podcast
 
-1. Create a folder under `podcasts/` with the podcast name
-2. Initialize a git repo inside it and connect it to GitHub
-3. Set up the folder structure:
+Run the setup script to scaffold the folder, placeholder files, and initial git commit:
+
+```
+python create_podcast.py "My Podcast Name"
+```
+
+Then follow `New_Podcast_Setup.txt` for the interactive steps: gathering show info, generating the description format from the RSS feed, and connecting to GitHub.
+
+To (re)generate `Description_Format.txt` from a podcast's published episodes:
+
+```
+python generate_description_format.py "podcasts/My Podcast"
+```
+
+Requires `GOOGLE_API_KEY` and an RSS URL set in the podcast's `Workflow.txt`.
+
+### Manual folder structure
+
+If setting up by hand instead of using the script:
    ```
    podcasts/YourPodcast/
      Workflow.txt
