@@ -190,7 +190,7 @@ HTML = r"""<!DOCTYPE html>
     gap: 14px;
     box-shadow: 0 2px 8px rgba(0,0,0,.3);
   }
-  header .icon { font-size: 28px; line-height: 1; }
+  header .icon { font-size: 42px; line-height: 1; }
   header h1 { font-size: 20px; font-weight: 600; letter-spacing: -.3px; }
   header p  { font-size: 13px; color: #94a3b8; margin-top: 2px; }
 
