@@ -25,7 +25,7 @@ The `podcasts/` folder is ignored by this repo. Each podcast folder is its own g
 
 **Python package:**
 ```
-pip install google-generativeai
+pip install google-genai
 ```
 
 **ffmpeg** — must be installed and available in your PATH:
@@ -60,7 +60,7 @@ The output folder is created automatically if it doesn't exist. The audio file i
 |---|---|
 | `audio_file` | Path to the audio file (mp3, m4a, wav, etc.) |
 | `output_file` | Output .txt path. Defaults to same name/location as audio if omitted. |
-| `--model` | Gemini model to use. Default: `gemini-2.0-flash` |
+| `--model` | Gemini model to use. Default: `gemini-2.5-flash-lite` |
 | `--api-key` | Pass API key directly instead of using the environment variable |
 
 ---
@@ -89,4 +89,4 @@ The output folder is created automatically if it doesn't exist. The audio file i
 
 - Audio files are excluded from all repos via `.gitignore`. Only transcripts and summaries are committed.
 - Transcription quality depends on audio clarity. The 30-second overlap between chunks helps the model handle sentence boundaries smoothly.
-- The script uses `gemini-2.0-flash` by default. For higher accuracy on difficult audio, pass `--model gemini-1.5-pro`.
+- The script uses `gemini-2.5-flash-lite` by default. For higher accuracy on difficult audio, pass `--model gemini-2.5-pro`.

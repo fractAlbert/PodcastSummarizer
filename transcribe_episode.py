@@ -7,7 +7,7 @@ Google Gemini API, stitches the results into a single transcript, and removes
 the temporary audio fragments when done.
 
 Requirements:
-    pip install google-generativeai
+    pip install google-genai
     ffmpeg installed and available in PATH  (https://ffmpeg.org)
 
 Usage:
@@ -30,12 +30,12 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-import google.generativeai as genai
+from google import genai
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 CHUNK_MINUTES = 12
 OVERLAP_SECONDS = 30
-MODEL = "gemini-2.0-flash"
+MODEL = "gemini-2.5-flash-lite"
 
 TRANSCRIPTION_PROMPT = """\
 You are a transcription assistant for a podcast.
@@ -100,21 +100,24 @@ def split_audio(audio_path: Path, chunk_dir: Path) -> list[tuple[Path, float, fl
     return chunks, duration
 
 
-def transcribe_chunk(model, chunk_path: Path, num: int, total: int) -> str:
+def transcribe_chunk(client, model_name: str, chunk_path: Path, num: int, total: int) -> str:
     print(f"  Uploading chunk {num}/{total}...", flush=True)
-    uploaded = genai.upload_file(str(chunk_path))
+    uploaded = client.files.upload(file=str(chunk_path))
 
     while uploaded.state.name == "PROCESSING":
         time.sleep(3)
-        uploaded = genai.get_file(uploaded.name)
+        uploaded = client.files.get(name=uploaded.name)
 
     if uploaded.state.name != "ACTIVE":
         raise RuntimeError(f"Upload failed for chunk {num} (state: {uploaded.state.name})")
 
     print(f"  Transcribing chunk {num}/{total}...", flush=True)
-    response = model.generate_content([uploaded, TRANSCRIPTION_PROMPT])
+    response = client.models.generate_content(
+        model=model_name,
+        contents=[uploaded, TRANSCRIPTION_PROMPT],
+    )
 
-    genai.delete_file(uploaded.name)
+    client.files.delete(name=uploaded.name)
     return response.text
 
 
@@ -177,8 +180,7 @@ def main():
         Path(args.output_file).resolve() if args.output_file else audio_path.with_suffix(".txt")
     )
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(args.model)
+    client = genai.Client(api_key=api_key)
 
     print(f"Audio:  {audio_path.name}")
     print(f"Output: {output_path}")
@@ -189,13 +191,13 @@ def main():
         print("Splitting audio into chunks...")
         chunks, duration = split_audio(audio_path, tmp_dir)
         print(
-            f"Duration: {duration / 60:.1f} min  →  {len(chunks)} chunk(s) "
+            f"Duration: {duration / 60:.1f} min  ->  {len(chunks)} chunk(s) "
             f"of ~{CHUNK_MINUTES} min each (with {OVERLAP_SECONDS}s overlap)"
         )
 
         transcripts = []
         for i, (chunk_path, start_sec, _) in enumerate(chunks, 1):
-            t = transcribe_chunk(model, chunk_path, i, len(chunks))
+            t = transcribe_chunk(client, args.model, chunk_path, i, len(chunks))
             transcripts.append(t)
             print(f"  Chunk {i} complete.", flush=True)
 
