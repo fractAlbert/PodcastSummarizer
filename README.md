@@ -8,8 +8,8 @@ A shared workspace for managing multiple podcast workflows. Each podcast lives i
 Podcast Summaries/
   transcribe_episode.py       ← shared transcription script
   podcasts/
-    ESA/                      ← Event Safety Podcast repo
-    1 Player Podcast/         ← 1 Player Podcast repo
+    CoffeeBreak/              ← Coffee Break Podcast repo
+    DeepDive/                 ← Deep Dive Podcast repo
     YourPodcast/              ← add more as needed
 ```
 
@@ -48,8 +48,8 @@ Get a key at [Google AI Studio](https://aistudio.google.com/app/apikey).
 Run from this root folder, pointing the output into the appropriate podcast subfolder:
 
 ```
-python transcribe_episode.py "path\to\audio.mp3" "podcasts\ESA\Transcripts\Episode 118 - Title.txt"
-python transcribe_episode.py "path\to\audio.mp3" "podcasts\1 Player Podcast\Transcripts\1P_401_Title.txt"
+python transcribe_episode.py "path\to\audio.mp3" "podcasts\CoffeeBreak\Transcripts\Episode 12 - Title.txt"
+python transcribe_episode.py "path\to\audio.mp3" "podcasts\DeepDive\Transcripts\DD_042_Title.txt"
 ```
 
 The output folder is created automatically if it doesn't exist. The audio file itself is not moved or deleted.
@@ -74,11 +74,16 @@ The output folder is created automatically if it doesn't exist. The audio file i
    podcasts/YourPodcast/
      Workflow.txt
      Prompts/
+       Description_Format.txt        ← layout and style rules, no sample text
+       Episode_Summary_Template.txt  ← fill-in-the-blank structure
+       New_Episode_Summary_Prompt.txt
+       Transcription_Prompt.txt
      Episode Summaries/
      Transcripts/
    ```
-4. In `Workflow.txt`, include a note that this workflow is run from the parent `Podcast Summaries` folder and that the transcription script is at the root level
-5. Reference the script using the path relative to the parent:
+4. In `Prompts/Description_Format.txt`, document the description structure for this podcast: field order, opening line convention, episode type variations, show notes format, and any style rules. Do not include sample output text.
+5. In `Workflow.txt`, include a note that this workflow is run from the parent `Podcast Summaries` folder and that the transcription script is at the root level. Include a step to read `Prompts/Description_Format.txt` before writing any summary.
+6. Reference the script using the path relative to the parent:
    ```
    python transcribe_episode.py "audio.mp3" "podcasts\YourPodcast\Transcripts\output.txt"
    ```
