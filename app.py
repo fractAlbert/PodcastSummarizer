@@ -105,6 +105,19 @@ def create_podcast():
     return jsonify({"job_id": start_job([PYTHON, str(ROOT / "create_podcast.py"), name])})
 
 
+@app.route("/api/search", methods=["POST"])
+def search():
+    data = request.json
+    query = data.get("query", "").strip()
+    podcast = data.get("podcast", "").strip()
+    if not query:
+        return jsonify({"error": "Search query is required"}), 400
+    cmd = [PYTHON, str(ROOT / "search_transcripts.py"), query]
+    if podcast:
+        cmd.append(f"podcasts/{podcast}")
+    return jsonify({"job_id": start_job(cmd)})
+
+
 @app.route("/api/check-links", methods=["POST"])
 def check_links():
     podcast = request.json.get("podcast", "").strip()
@@ -486,6 +499,35 @@ HTML = r"""<!DOCTYPE html>
     <button class="btn-primary" onclick="generateFormat()">Generate Format File</button>
   </div>
 
+  <!-- ── Search Transcripts ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon purple">🔍</div>
+      <div>
+        <div class="card-title">Search Transcripts</div>
+        <div class="card-desc">Find a guest, topic, or phrase across all episodes</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="search-query">Search</label>
+      <input type="text" id="search-query" placeholder="e.g. Ben Cattaneo, fire curtain, IBC 2027"
+             onkeydown="if(event.key==='Enter') searchTranscripts()">
+    </div>
+
+    <div class="field">
+      <label for="search-podcast-select">Podcast <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <select id="search-podcast-select">
+        <option value="">— all podcasts —</option>
+        {% for p in podcasts %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button class="btn-primary" onclick="searchTranscripts()">Search</button>
+  </div>
+
   <!-- ── Check Links ── -->
   <div class="card">
     <div class="card-header">
@@ -648,6 +690,13 @@ HTML = r"""<!DOCTYPE html>
     const name = document.getElementById("podcast-name").value.trim();
     if (!name) { toast("Please enter a podcast name", "error"); return; }
     postAndStream("/api/create-podcast", { name }, `Create "${name}"`);
+  }
+
+  function searchTranscripts() {
+    const query   = document.getElementById("search-query").value.trim();
+    const podcast = document.getElementById("search-podcast-select").value;
+    if (!query) { toast("Please enter a search term", "error"); return; }
+    postAndStream("/api/search", { query, podcast }, `Search: "${query}"`);
   }
 
   function checkLinks() {
