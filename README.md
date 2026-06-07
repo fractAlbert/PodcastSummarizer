@@ -1,6 +1,6 @@
 # Podcast Summaries
 
-A shared workspace for managing multiple podcast workflows with Claude Code.
+A shared workspace for managing multiple podcast workflows with an AI coding assistant.
 
 ![Podcast Summaries UI](assets/screenshots.png)
 
@@ -12,12 +12,16 @@ This workspace keeps the tools and podcasts organised in one place. Each podcast
 lives in its own independent git repository under `podcasts/`. The shared tools
 live here at the root.
 
-**Claude Code is the main interface.** You give it a file and a direction — "transcribe
-this episode", "run the summary workflow", "set up a new podcast called X" — and it
-handles the rest: transcribing audio, syncing descriptions from the RSS feed, writing
-the episode summary, looking up URLs, and committing the results.
+**An AI coding assistant is the main interface.** You give it a file and a direction —
+"transcribe this episode", "run the summary workflow", "set up a new podcast called X" —
+and it handles the rest: transcribing audio, syncing descriptions from the RSS feed,
+writing the episode summary, looking up URLs, and committing the results.
 
-A few things can also be run directly as Python scripts without Claude (see
+Any AI with filesystem and terminal access works — Claude Code, GitHub Copilot, and
+Gemini Code Assist are all good fits. A browser-only chat AI won't have the access
+needed to run scripts or commit files.
+
+A few things can also be run directly as Python scripts without an AI assistant (see
 [Technical](#technical)).
 
 ---
@@ -48,9 +52,9 @@ Get a key at [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 ## Using
 
-Open this folder in Claude Code and tell it what you need:
+Open this folder in your AI assistant and tell it what you need:
 
-| What you say | What Claude does |
+| What you say | What the AI does |
 |---|---|
 | "I have a new episode to transcribe: [path]" | Transcribes the audio and saves the transcript |
 | "Run the summary workflow" | Syncs RSS descriptions, writes the episode summary, looks up URLs, commits |
@@ -59,7 +63,7 @@ Open this folder in Claude Code and tell it what you need:
 
 The generic episode steps live in `Episode_Workflow.txt` at the root. Each podcast
 has a `Podcast.config` (RSS URL, hosts, file naming) and a `Workflow.txt` for any
-podcast-specific additions. `Prompts/Description_Format.txt` tells Claude how that
+podcast-specific additions. `Prompts/Description_Format.txt` tells the AI how that
 show's descriptions are structured — no sample text, just rules and layout.
 
 ---
@@ -76,7 +80,7 @@ accuracy on difficult audio.
 
 ### Scripts you can run directly
 
-These three tasks can be run without Claude:
+These three tasks can be run without an AI assistant:
 
 **Transcribe an episode:**
 ```
@@ -106,7 +110,7 @@ Podcast Summaries/
   create_podcast.py               ← scaffold a new podcast repo
   generate_description_format.py  ← draft Description_Format.txt from RSS
   Episode_Workflow.txt            ← generic episode workflow (all podcasts)
-  New_Podcast_Setup.txt           ← interactive setup workflow for Claude
+  New_Podcast_Setup.txt           ← interactive setup workflow for your AI assistant
   podcasts/
     MyPodcast/                    ← independent git repo
       Podcast.config              ← RSS URL, GitHub URL, hosts, file naming
