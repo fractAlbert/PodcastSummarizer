@@ -57,9 +57,10 @@ Open this folder in Claude Code and tell it what you need:
 | "Create a new podcast repo called [Name]" | Scaffolds the folder, gathers show info, generates the format file, connects GitHub |
 | "Regenerate the description format for [podcast]" | Re-analyses the RSS feed and updates `Description_Format.txt` |
 
-Each podcast has a `Workflow.txt` that Claude reads to understand the steps for that
-specific show. The `Prompts/Description_Format.txt` in each podcast folder tells Claude
-how that show's descriptions are structured — no sample text, just rules and layout.
+The generic episode steps live in `Episode_Workflow.txt` at the root. Each podcast
+has a `Podcast.config` (RSS URL, hosts, file naming) and a `Workflow.txt` for any
+podcast-specific additions. `Prompts/Description_Format.txt` tells Claude how that
+show's descriptions are structured — no sample text, just rules and layout.
 
 ---
 
@@ -93,7 +94,7 @@ Creates the folder structure, placeholder files, and an initial git commit under
 ```
 python generate_description_format.py "podcasts/My Podcast"
 ```
-Fetches the RSS feed (reads the URL from `Workflow.txt`), analyses the last 10
+Fetches the RSS feed (reads the URL from `Podcast.config`), analyses the last 10
 published episode descriptions with Gemini, and writes `Prompts/Description_Format.txt`.
 Requires `GOOGLE_API_KEY` and the RSS URL set in `Podcast.config`.
 
