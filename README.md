@@ -21,8 +21,8 @@ Any AI with filesystem and terminal access works — Claude Code, GitHub Copilot
 Gemini Code Assist are all good fits. A browser-only chat AI won't have the access
 needed to run scripts or commit files.
 
-A few things can also be run directly as Python scripts without an AI assistant (see
-[Technical](#technical)).
+Several tasks can also be run directly as Python scripts or through the web UI
+(see [Technical](#technical)).
 
 ---
 
@@ -30,7 +30,7 @@ A few things can also be run directly as Python scripts without an AI assistant 
 
 **Python package** (for transcription and format generation):
 ```
-pip install google-genai
+pip install google-genai flask
 ```
 
 **ffmpeg** — required for audio transcription; must be on your PATH:
@@ -68,6 +68,25 @@ show's descriptions are structured — no sample text, just rules and layout.
 
 ---
 
+## Web UI
+
+Double-click **`Launch.bat`** (or run `python app.py`) to open the web interface.
+It provides point-and-click access to the most common tasks without needing an AI assistant:
+
+| Card | What it does |
+|---|---|
+| **Transcribe Episode** | Select an audio file and transcribe it with Gemini |
+| **Create New Podcast** | Scaffold a new podcast folder and starter files |
+| **Generate Description Format** | Draft format rules by analysing published RSS episodes |
+| **Social Media Snippets** | Generate ready-to-post Twitter/X, LinkedIn, and Newsletter copy from an episode summary |
+| **Search Transcripts** | Full-text search across all transcripts, optionally filtered to one podcast |
+| **Check Links** | Scan episode summaries for dead or unreachable URLs |
+
+Long-running tasks (transcription, link checking) stream output live to a console
+panel at the bottom of the page.
+
+---
+
 ## Technical
 
 ### How transcription works
@@ -80,7 +99,7 @@ accuracy on difficult audio.
 
 ### Scripts you can run directly
 
-These three tasks can be run without an AI assistant:
+These tasks can be run without an AI assistant (or invoked from the web UI):
 
 **Transcribe an episode:**
 ```
@@ -102,21 +121,48 @@ Fetches the RSS feed (reads the URL from `Podcast.config`), analyses the last 10
 published episode descriptions with Gemini, and writes `Prompts/Description_Format.txt`.
 Requires `GOOGLE_API_KEY` and the RSS URL set in `Podcast.config`.
 
+**Generate social media snippets:**
+```
+python generate_social.py "podcasts/My Podcast/Episode Summaries/Episode 10 - Title.txt"
+python generate_social.py "..." --platforms twitter newsletter
+```
+Reads an episode summary and writes Twitter/X, LinkedIn, and Newsletter posts using
+Gemini. Requires `GOOGLE_API_KEY`.
+
+**Search transcripts:**
+```
+python search_transcripts.py "search term"
+python search_transcripts.py "search term" "podcasts/My Podcast"
+```
+Case-insensitive search across all transcript files. Optionally scope to one podcast.
+
+**Check links:**
+```
+python check_links.py                        # all podcasts
+python check_links.py "podcasts/My Podcast"  # one podcast
+```
+Scans every episode summary for URLs and makes a live HTTP request to each one.
+Reports dead links (404/410) and uncertain ones (bot-blocked or server errors).
+
 ### Folder structure
 
 ```
 Podcast Summaries/
-  transcribe_episode.py           ← shared transcription script
-  create_podcast.py               ← scaffold a new podcast repo
-  generate_description_format.py  ← draft Description_Format.txt from RSS
-  Episode_Workflow.txt            ← generic episode workflow (all podcasts)
-  New_Podcast_Setup.txt           ← interactive setup workflow for your AI assistant
+  app.py                              <- web UI (run with Launch.bat)
+  transcribe_episode.py               <- shared transcription script
+  create_podcast.py                   <- scaffold a new podcast repo
+  generate_description_format.py      <- draft Description_Format.txt from RSS
+  generate_social.py                  <- generate social media posts from a summary
+  search_transcripts.py               <- full-text search across transcripts
+  check_links.py                      <- verify URLs in episode summaries
+  Episode_Workflow.txt                <- generic episode workflow (all podcasts)
+  New_Podcast_Setup.txt               <- interactive setup workflow for your AI assistant
   podcasts/
-    MyPodcast/                    ← independent git repo
-      Podcast.config              ← RSS URL, GitHub URL, hosts, file naming
-      Workflow.txt                ← podcast-specific steps and notes
+    MyPodcast/                        <- independent git repo
+      Podcast.config                  <- RSS URL, GitHub URL, hosts, file naming
+      Workflow.txt                    <- podcast-specific steps and notes
       Prompts/
-        Description_Format.txt   ← layout/style rules (no sample text)
+        Description_Format.txt       <- layout/style rules (no sample text)
         Episode_Summary_Template.txt
         New_Episode_Summary_Prompt.txt
         Transcription_Prompt.txt

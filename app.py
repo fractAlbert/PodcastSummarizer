@@ -137,16 +137,26 @@ def search():
 @app.route("/api/generate-social", methods=["POST"])
 def generate_social():
     data = request.json
-    podcast  = data.get("podcast", "").strip()
-    episode  = data.get("episode", "").strip()
+    podcast   = data.get("podcast", "").strip()
+    episode   = data.get("episode", "").strip()
     platforms = data.get("platforms", [])
     if not podcast or not episode:
         return jsonify({"error": "Select a podcast and episode"}), 400
     summary_path = str(PODCASTS_DIR / podcast / "Episode Summaries" / episode)
-    cmd = [PYTHON, str(ROOT / "generate_social.py"), summary_path]
+    cmd = [PYTHON, str(ROOT / "generate_social.py"), summary_path, "--json"]
     if platforms:
         cmd += ["--platforms"] + platforms
-    return jsonify({"job_id": start_job(cmd)})
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT, timeout=120)
+        if result.returncode != 0:
+            err = (result.stderr or result.stdout or "Generation failed").strip()
+            return jsonify({"error": err}), 500
+        snippets = json.loads(result.stdout.strip())
+        return jsonify({"snippets": snippets})
+    except subprocess.TimeoutExpired:
+        return jsonify({"error": "Timed out after 120 seconds"}), 500
+    except json.JSONDecodeError:
+        return jsonify({"error": "Could not parse Gemini output"}), 500
 
 
 @app.route("/api/check-links", methods=["POST"])
@@ -421,6 +431,19 @@ HTML = r"""<!DOCTYPE html>
   #toast.show { opacity: 1; }
   #toast.success { background: var(--success); }
   #toast.error   { background: var(--error); }
+
+  /* ── Snippet results ── */
+  .snippet-results { display: flex; flex-direction: column; gap: 12px; }
+  .snippet-block { border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .snippet-block-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; background: var(--bg); border-bottom: 1px solid var(--border);
+  }
+  .snippet-block-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .btn-copy { background: var(--accent); color: #fff; padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+  .btn-copy:hover:not(:disabled) { background: var(--accent-h); }
+  .btn-copy.copied { background: var(--success); }
+  .snippet-body { padding: 12px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
 </style>
 </head>
 <body>
@@ -531,7 +554,7 @@ HTML = r"""<!DOCTYPE html>
   </div>
 
   <!-- ── Social Snippets ── -->
-  <div class="card">
+  <div class="card" id="social-card">
     <div class="card-header">
       <div class="card-icon blue">📣</div>
       <div>
@@ -572,7 +595,9 @@ HTML = r"""<!DOCTYPE html>
       </div>
     </div>
 
-    <button class="btn-primary" onclick="generateSocial()">Generate Snippets</button>
+    <button class="btn-primary" id="social-generate-btn" onclick="generateSocial()">Generate Snippets</button>
+
+    <div id="social-results" class="snippet-results" style="display:none"></div>
   </div>
 
   <!-- ── Search Transcripts ── -->
@@ -773,6 +798,7 @@ HTML = r"""<!DOCTYPE html>
     const sel = document.getElementById("social-episode-select");
     sel.innerHTML = '<option value="">-- loading --</option>';
     sel.disabled = true;
+    document.getElementById("social-results").style.display = "none";
     if (!podcast) {
       sel.innerHTML = '<option value="">-- select a podcast first --</option>';
       return;
@@ -782,17 +808,74 @@ HTML = r"""<!DOCTYPE html>
     sel.innerHTML = '<option value="">-- select an episode --</option>' +
       episodes.map(e => `<option value="${e}">${e}</option>`).join("");
     sel.disabled = false;
+    if (episodes.length > 0) sel.selectedIndex = 1;
   }
 
-  function generateSocial() {
-    const podcast = document.getElementById("social-podcast-select").value;
-    const episode = document.getElementById("social-episode-select").value;
-    const platforms = [...document.querySelectorAll(".card input[type=checkbox]:checked")]
+  async function generateSocial() {
+    const podcast   = document.getElementById("social-podcast-select").value;
+    const episode   = document.getElementById("social-episode-select").value;
+    const platforms = [...document.querySelectorAll("#social-card input[type=checkbox]:checked")]
                         .map(cb => cb.value);
     if (!podcast || !episode) { toast("Select a podcast and episode", "error"); return; }
     if (!platforms.length)    { toast("Select at least one platform", "error"); return; }
-    postAndStream("/api/generate-social", { podcast, episode, platforms },
-                  `Snippets -- ${episode}`);
+
+    const btn = document.getElementById("social-generate-btn");
+    btn.textContent = "Generating...";
+    btn.disabled = true;
+    document.getElementById("social-results").style.display = "none";
+
+    try {
+      const res = await fetch("/api/generate-social", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ podcast, episode, platforms }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) { toast(data.error || "Generation failed", "error"); return; }
+      renderSnippets(data.snippets, platforms);
+      toast("Snippets ready");
+    } catch (e) {
+      toast("Request failed", "error");
+    } finally {
+      btn.textContent = "Generate Snippets";
+      btn.disabled = false;
+    }
+  }
+
+  const SNIPPET_LABELS = { twitter: "Twitter / X", linkedin: "LinkedIn", newsletter: "Newsletter" };
+
+  function renderSnippets(snippets, platforms) {
+    const container = document.getElementById("social-results");
+    container.innerHTML = "";
+    for (const p of platforms) {
+      if (!snippets[p]) continue;
+      const block = document.createElement("div");
+      block.className = "snippet-block";
+      block.innerHTML =
+        `<div class="snippet-block-header">` +
+          `<span class="snippet-block-label">${SNIPPET_LABELS[p] || p}</span>` +
+          `<button class="btn-copy" onclick="copySnippet(this,'${p}')">Copy</button>` +
+        `</div>` +
+        `<div class="snippet-body" id="snippet-${p}">${escHtml(snippets[p])}</div>`;
+      container.appendChild(block);
+    }
+    container.style.display = "flex";
+  }
+
+  function escHtml(t) {
+    return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  async function copySnippet(btn, platform) {
+    const text = document.getElementById(`snippet-${platform}`).textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = "Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
+    } catch {
+      toast("Copy failed -- select manually", "error");
+    }
   }
 
   function searchTranscripts() {
