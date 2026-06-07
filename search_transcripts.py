@@ -25,7 +25,7 @@ def search_podcast(pattern: re.Pattern, podcast_dir: Path) -> int:
         lines = transcript_file.read_text(encoding="utf-8", errors="ignore").splitlines()
         matches = [line.strip() for line in lines if pattern.search(line)]
         if matches:
-            print(f"\n── {podcast_dir.name} / {transcript_file.name} ({len(matches)} match(es))")
+            print(f"\n-- {podcast_dir.name} / {transcript_file.name} ({len(matches)} match(es))")
             for line in matches:
                 print(f"  {line}")
             total += len(matches)

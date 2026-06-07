@@ -28,7 +28,7 @@ USER_AGENT = (
     "Chrome/124.0.0.0 Safari/537.36"
 )
 
-# These status codes mean the server responded but won't serve bots —
+# These status codes mean the server responded but won't serve bots --
 # the page likely exists. Flag as a warning, not a dead link.
 UNCERTAIN_CODES = {403, 406, 429}
 
@@ -62,7 +62,7 @@ def check_url(url: str) -> tuple[str, int | None, str]:
                     return "uncertain", e.code, e.reason
                 if e.code in (404, 410):
                     return "dead", e.code, e.reason
-                # Other 4xx/5xx — retry once
+                # Other 4xx/5xx -- retry once
                 if attempt == 0:
                     break
                 return "uncertain", e.code, e.reason
@@ -140,7 +140,7 @@ def main():
         print("No dead links found.")
 
     if all_uncertain:
-        print(f"\n{len(all_uncertain)} uncertain (bot-blocked or server error — check manually):\n")
+        print(f"\n{len(all_uncertain)} uncertain (bot-blocked or server error -- check manually):\n")
         for fname, url, status, msg in all_uncertain:
             print(f"  [{status}] {url}")
             print(f"        in: {fname}")
