@@ -157,16 +157,16 @@ HTML = r"""<!DOCTYPE html>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:       #f1f5f9;
+    --bg:       #fdf8ee;
     --card:     #ffffff;
-    --header:   #0f172a;
-    --accent:   #6366f1;
-    --accent-h: #4f46e5;
+    --header:   #1a1000;
+    --accent:   #daa520;
+    --accent-h: #b8860b;
     --success:  #10b981;
     --error:    #ef4444;
-    --text:     #1e293b;
-    --muted:    #64748b;
-    --border:   #e2e8f0;
+    --text:     #1e1a0e;
+    --muted:    #7a6b4a;
+    --border:   #e8dfc0;
     --shadow:   0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
     --radius:   12px;
   }
@@ -192,7 +192,7 @@ HTML = r"""<!DOCTYPE html>
   }
   header .icon { font-size: 42px; line-height: 1; }
   header h1 { font-size: 20px; font-weight: 600; letter-spacing: -.3px; }
-  header p  { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+  header p  { font-size: 13px; color: #c8a96a; margin-top: 2px; }
 
   /* ── Main grid ── */
   main {
@@ -229,9 +229,9 @@ HTML = r"""<!DOCTYPE html>
     font-size: 20px;
     flex-shrink: 0;
   }
-  .card-icon.purple { background: #ede9fe; }
-  .card-icon.blue   { background: #dbeafe; }
-  .card-icon.green  { background: #d1fae5; }
+  .card-icon.purple { background: #fef9e7; }
+  .card-icon.blue   { background: #fef3c7; }
+  .card-icon.green  { background: #fde68a; }
   .card-title { font-size: 16px; font-weight: 600; }
   .card-desc  { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
@@ -432,9 +432,9 @@ HTML = r"""<!DOCTYPE html>
       <input type="text" id="podcast-name" placeholder="e.g. Joe's Podcast Shack">
     </div>
 
-    <div style="background:#f8fafc; border:1.5px solid var(--border); border-radius:8px; padding:14px; font-size:13px; color:var(--muted); line-height:1.6;">
+    <div style="background:#fdf8ee; border:1.5px solid var(--border); border-radius:8px; padding:14px; font-size:13px; color:var(--muted); line-height:1.6;">
       Creates the folder structure, placeholder prompt files, and an initial git
-      commit under <code style="background:#e2e8f0;padding:1px 5px;border-radius:4px">podcasts/</code>.
+      commit under <code style="background:#e8dfc0;padding:1px 5px;border-radius:4px">podcasts/</code>.
       Follow up with Claude to fill in the show details and connect to GitHub.
     </div>
 
@@ -467,9 +467,9 @@ HTML = r"""<!DOCTYPE html>
       <div class="optional-label">Leave blank to use the URL already in Workflow.txt</div>
     </div>
 
-    <div style="background:#f8fafc; border:1.5px solid var(--border); border-radius:8px; padding:14px; font-size:13px; color:var(--muted); line-height:1.6;">
+    <div style="background:#fdf8ee; border:1.5px solid var(--border); border-radius:8px; padding:14px; font-size:13px; color:var(--muted); line-height:1.6;">
       Analyses the last 10 published episode descriptions and writes
-      <code style="background:#e2e8f0;padding:1px 5px;border-radius:4px">Prompts/Description_Format.txt</code>.
+      <code style="background:#e8dfc0;padding:1px 5px;border-radius:4px">Prompts/Description_Format.txt</code>.
       Requires a Google API key and at least 5 published episodes.
     </div>
 

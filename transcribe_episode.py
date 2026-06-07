@@ -121,6 +121,17 @@ def transcribe_chunk(client, model_name: str, chunk_path: Path, num: int, total:
     return response.text
 
 
+def deduplicate_chunk(text: str, window: int = 6) -> str:
+    """Truncate a chunk at the point where a repeating line sequence begins."""
+    lines = text.splitlines()
+    for i in range(len(lines) - window):
+        seq = lines[i:i + window]
+        for j in range(i + window, len(lines) - window + 1):
+            if lines[j:j + window] == seq:
+                return "\n".join(lines[:j]).rstrip()
+    return text
+
+
 def stitch(transcripts: list[str]) -> str:
     """Join consecutive transcripts, removing duplicated text from overlapping audio."""
     if not transcripts:
@@ -198,6 +209,7 @@ def main():
         transcripts = []
         for i, (chunk_path, start_sec, _) in enumerate(chunks, 1):
             t = transcribe_chunk(client, args.model, chunk_path, i, len(chunks))
+            t = deduplicate_chunk(t)
             transcripts.append(t)
             print(f"  Chunk {i} complete.", flush=True)
 
