@@ -63,6 +63,22 @@ def api_podcasts():
     return jsonify(get_podcasts())
 
 
+@app.route("/api/episodes")
+def api_episodes():
+    podcast = request.args.get("podcast", "").strip()
+    if not podcast:
+        return jsonify([])
+    summaries_dir = PODCASTS_DIR / podcast / "Episode Summaries"
+    if not summaries_dir.exists():
+        return jsonify([])
+    files = sorted(
+        [f.name for f in summaries_dir.glob("*.txt")
+         if f.name != "All_Episode_Summaries.txt"],
+        reverse=True,
+    )
+    return jsonify(files)
+
+
 @app.route("/api/browse", methods=["POST"])
 def browse():
     try:
@@ -115,6 +131,21 @@ def search():
     cmd = [PYTHON, str(ROOT / "search_transcripts.py"), query]
     if podcast:
         cmd.append(f"podcasts/{podcast}")
+    return jsonify({"job_id": start_job(cmd)})
+
+
+@app.route("/api/generate-social", methods=["POST"])
+def generate_social():
+    data = request.json
+    podcast  = data.get("podcast", "").strip()
+    episode  = data.get("episode", "").strip()
+    platforms = data.get("platforms", [])
+    if not podcast or not episode:
+        return jsonify({"error": "Select a podcast and episode"}), 400
+    summary_path = str(PODCASTS_DIR / podcast / "Episode Summaries" / episode)
+    cmd = [PYTHON, str(ROOT / "generate_social.py"), summary_path]
+    if platforms:
+        cmd += ["--platforms"] + platforms
     return jsonify({"job_id": start_job(cmd)})
 
 
@@ -499,6 +530,51 @@ HTML = r"""<!DOCTYPE html>
     <button class="btn-primary" onclick="generateFormat()">Generate Format File</button>
   </div>
 
+  <!-- ── Social Snippets ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon blue">📣</div>
+      <div>
+        <div class="card-title">Social Media Snippets</div>
+        <div class="card-desc">Generate posts from an episode summary</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="social-podcast-select">Podcast</label>
+      <select id="social-podcast-select" onchange="loadEpisodes()">
+        <option value="">-- select a podcast --</option>
+        {% for p in podcasts %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="social-episode-select">Episode</label>
+      <select id="social-episode-select" disabled>
+        <option value="">-- select a podcast first --</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Platforms</label>
+      <div style="display:flex; gap:16px; flex-wrap:wrap; padding:4px 0;">
+        <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+          <input type="checkbox" value="twitter"    checked> Twitter / X
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+          <input type="checkbox" value="linkedin"   checked> LinkedIn
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+          <input type="checkbox" value="newsletter" checked> Newsletter
+        </label>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="generateSocial()">Generate Snippets</button>
+  </div>
+
   <!-- ── Search Transcripts ── -->
   <div class="card">
     <div class="card-header">
@@ -690,6 +766,33 @@ HTML = r"""<!DOCTYPE html>
     const name = document.getElementById("podcast-name").value.trim();
     if (!name) { toast("Please enter a podcast name", "error"); return; }
     postAndStream("/api/create-podcast", { name }, `Create "${name}"`);
+  }
+
+  async function loadEpisodes() {
+    const podcast = document.getElementById("social-podcast-select").value;
+    const sel = document.getElementById("social-episode-select");
+    sel.innerHTML = '<option value="">-- loading --</option>';
+    sel.disabled = true;
+    if (!podcast) {
+      sel.innerHTML = '<option value="">-- select a podcast first --</option>';
+      return;
+    }
+    const res = await fetch(`/api/episodes?podcast=${encodeURIComponent(podcast)}`);
+    const episodes = await res.json();
+    sel.innerHTML = '<option value="">-- select an episode --</option>' +
+      episodes.map(e => `<option value="${e}">${e}</option>`).join("");
+    sel.disabled = false;
+  }
+
+  function generateSocial() {
+    const podcast = document.getElementById("social-podcast-select").value;
+    const episode = document.getElementById("social-episode-select").value;
+    const platforms = [...document.querySelectorAll(".card input[type=checkbox]:checked")]
+                        .map(cb => cb.value);
+    if (!podcast || !episode) { toast("Select a podcast and episode", "error"); return; }
+    if (!platforms.length)    { toast("Select at least one platform", "error"); return; }
+    postAndStream("/api/generate-social", { podcast, episode, platforms },
+                  `Snippets -- ${episode}`);
   }
 
   function searchTranscripts() {
