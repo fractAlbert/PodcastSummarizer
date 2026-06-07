@@ -105,6 +105,15 @@ def create_podcast():
     return jsonify({"job_id": start_job([PYTHON, str(ROOT / "create_podcast.py"), name])})
 
 
+@app.route("/api/check-links", methods=["POST"])
+def check_links():
+    podcast = request.json.get("podcast", "").strip()
+    cmd = [PYTHON, str(ROOT / "check_links.py")]
+    if podcast:
+        cmd.append(f"podcasts/{podcast}")
+    return jsonify({"job_id": start_job(cmd)})
+
+
 @app.route("/api/generate-format", methods=["POST"])
 def generate_format():
     data = request.json
@@ -232,6 +241,7 @@ HTML = r"""<!DOCTYPE html>
   .card-icon.purple { background: #fef9e7; }
   .card-icon.blue   { background: #fef3c7; }
   .card-icon.green  { background: #fde68a; }
+  .card-icon.orange { background: #fde68a; }
   .card-title { font-size: 16px; font-weight: 600; }
   .card-desc  { font-size: 13px; color: var(--muted); margin-top: 2px; }
 
@@ -476,6 +486,34 @@ HTML = r"""<!DOCTYPE html>
     <button class="btn-primary" onclick="generateFormat()">Generate Format File</button>
   </div>
 
+  <!-- ── Check Links ── -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon orange">🔗</div>
+      <div>
+        <div class="card-title">Check Links</div>
+        <div class="card-desc">Verify Show Notes URLs are still live</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="check-podcast-select">Podcast</label>
+      <select id="check-podcast-select">
+        <option value="">— all podcasts —</option>
+        {% for p in podcasts %}
+        <option value="{{ p }}">{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div style="background:#fdf8ee; border:1.5px solid var(--border); border-radius:8px; padding:14px; font-size:13px; color:var(--muted); line-height:1.6;">
+      Scans every episode summary and makes a live request to each URL.
+      Reports any that return an error or can't be reached.
+    </div>
+
+    <button class="btn-primary" onclick="checkLinks()">Check Links</button>
+  </div>
+
 </main>
 
 <!-- ── Footer ── -->
@@ -610,6 +648,12 @@ HTML = r"""<!DOCTYPE html>
     const name = document.getElementById("podcast-name").value.trim();
     if (!name) { toast("Please enter a podcast name", "error"); return; }
     postAndStream("/api/create-podcast", { name }, `Create "${name}"`);
+  }
+
+  function checkLinks() {
+    const podcast = document.getElementById("check-podcast-select").value;
+    const label = podcast ? `Check links — ${podcast}` : "Check links — all podcasts";
+    postAndStream("/api/check-links", { podcast }, label);
   }
 
   function generateFormat() {
