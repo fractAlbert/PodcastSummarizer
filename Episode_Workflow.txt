@@ -59,7 +59,11 @@ If the podcast's Workflow.txt says "no additional steps", proceed to Step 6.
 
 STEP 6 — WRITE THE SUMMARY
 ----------------------------
-Write the episode summary following the rules in Description_Format.txt.
+Before writing, read 3–5 recent episode summaries from Episode Summaries/ to
+calibrate tone, length, and level of detail. The goal is to match what is already
+established — do not write more or less than is typical for this podcast.
+
+Then write the episode summary following the rules in Description_Format.txt.
 Use the hosts and any relevant details from Podcast.config.
 
 
