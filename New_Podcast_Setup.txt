@@ -11,7 +11,8 @@ Run from the parent Podcast Summaries folder:
 
     python create_podcast.py "Podcast Name"
 
-This creates podcasts/[Name]/ with placeholder files and an initial git commit.
+This creates podcasts/[Name]/ with Podcast.config, Workflow.txt, placeholder
+prompt files, and an initial git commit.
 
 
 STEP 2 — GATHER REQUIRED INFORMATION
@@ -29,6 +30,7 @@ Ask the user for the following. Collect all answers before proceeding to Step 3.
 
   d. Episode naming and numbering format
      How are episodes identified? (e.g. "Episode 42", "S2E07", "DD_042", no numbers)
+     What does the filename look like? (e.g. "Episode 42 - Title.txt", "DD_042_Title.txt")
 
   e. Episode types
      Does the show have distinct episode formats?
@@ -43,21 +45,31 @@ Ask the user for the following. Collect all answers before proceeding to Step 3.
      If one doesn't exist yet, ask the user to create it and share the URL.
 
 
-STEP 3 — UPDATE WORKFLOW.TXT
-------------------------------
-Fill in the [TODO] markers in podcasts/[Name]/Workflow.txt:
+STEP 3 — FILL IN PODCAST.CONFIG
+---------------------------------
+Update podcasts/[Name]/Podcast.config with the values from Step 2:
   - Replace [TODO: add RSS feed URL] with the URL from Step 2a
-  - Update the transcript filename example to match the format from Step 2d
-  - Replace the episode-type [TODO] with the types identified in Step 2e
+  - Replace [TODO: add GitHub repo URL] with the URL from Step 2g
+  - Replace the HOSTS placeholder with names and roles from Step 2c
+  - Replace EPISODE FORMAT and FILE FORMAT with the formats from Step 2d
 
 
-STEP 4 — GENERATE DESCRIPTION_FORMAT.TXT
+STEP 4 — UPDATE WORKFLOW.TXT
+------------------------------
+Update podcasts/[Name]/Workflow.txt with podcast-specific steps from Step 2:
+  - If the show has distinct episode types (Step 2e), add an identification step
+  - If show notes have a specific search convention (Step 2f), add a show notes step
+  - If no special steps are needed, replace the [TODO] block with:
+    "NO ADDITIONAL STEPS. The generic workflow applies fully to this podcast."
+
+
+STEP 5 — GENERATE DESCRIPTION_FORMAT.TXT
 ------------------------------------------
 If the podcast has 5 or more published episodes, run:
 
     python generate_description_format.py "podcasts/[Name]"
 
-(The RSS URL is read automatically from Workflow.txt after Step 3.)
+(The RSS URL is read automatically from Podcast.config.)
 
 Review the generated file. Adjust anything that doesn't match what the user
 described in Step 2, or that looks like it was inferred incorrectly.
@@ -66,7 +78,7 @@ If the podcast has fewer than 5 published episodes, fill in
 Prompts/Description_Format.txt manually using the information from Step 2.
 
 
-STEP 5 — COMPLETE THE REMAINING PROMPTS
+STEP 6 — COMPLETE THE REMAINING PROMPTS
 -----------------------------------------
 Fill in the [TODO] markers in:
 
@@ -82,20 +94,20 @@ Fill in the [TODO] markers in:
     - Usually fine as-is; customise if the show has unusual speaker patterns
 
 
-STEP 6 — CONNECT TO GITHUB AND PUSH
+STEP 7 — CONNECT TO GITHUB AND PUSH
 --------------------------------------
     cd "podcasts/[Name]"
-    git remote add origin [GitHub URL from Step 2g]
+    git remote add origin [GitHub URL from Podcast.config]
     git push -u origin main
 
 (Use "master" instead of "main" if that is the repo's default branch.)
 
 
-STEP 7 — MAKE AN INITIAL EPISODE SUMMARY (OPTIONAL)
+STEP 8 — MAKE AN INITIAL EPISODE SUMMARY (OPTIONAL)
 ------------------------------------------------------
-If the user wants to process a first episode immediately, follow the podcast's
-Workflow.txt to run through the full summary process. This validates the setup
-end-to-end.
+If the user wants to process a first episode immediately, follow
+Episode_Workflow.txt (and the podcast's own Workflow.txt) to run through the
+full summary process. This validates the setup end-to-end.
 
 
 NOTES

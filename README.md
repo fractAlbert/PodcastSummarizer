@@ -95,7 +95,7 @@ python generate_description_format.py "podcasts/My Podcast"
 ```
 Fetches the RSS feed (reads the URL from `Workflow.txt`), analyses the last 10
 published episode descriptions with Gemini, and writes `Prompts/Description_Format.txt`.
-Requires `GOOGLE_API_KEY` and the RSS URL set in `Workflow.txt`.
+Requires `GOOGLE_API_KEY` and the RSS URL set in `Podcast.config`.
 
 ### Folder structure
 
@@ -104,10 +104,12 @@ Podcast Summaries/
   transcribe_episode.py           ← shared transcription script
   create_podcast.py               ← scaffold a new podcast repo
   generate_description_format.py  ← draft Description_Format.txt from RSS
+  Episode_Workflow.txt            ← generic episode workflow (all podcasts)
   New_Podcast_Setup.txt           ← interactive setup workflow for Claude
   podcasts/
     MyPodcast/                    ← independent git repo
-      Workflow.txt                ← per-podcast workflow Claude follows
+      Podcast.config              ← RSS URL, GitHub URL, hosts, file naming
+      Workflow.txt                ← podcast-specific steps and notes
       Prompts/
         Description_Format.txt   ← layout/style rules (no sample text)
         Episode_Summary_Template.txt

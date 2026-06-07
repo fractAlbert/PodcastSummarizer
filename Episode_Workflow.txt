@@ -1,0 +1,74 @@
+EPISODE SUMMARY WORKFLOW
+=========================
+
+Generic workflow for processing any podcast episode.
+Read this alongside the podcast's Podcast.config and Workflow.txt.
+
+BEFORE STARTING
+---------------
+Read the podcast's Podcast.config for:
+  - RSS feed URL
+  - Episode file naming format
+  - Transcript directory path
+
+
+STEP 1 — SYNC EXISTING SUMMARIES FROM RSS FEED
+------------------------------------------------
+Fetch the RSS feed URL from Podcast.config.
+
+Compare the descriptions for the last three published episodes against the
+corresponding files in the Episode Summaries folder. Descriptions are sometimes
+edited during publishing and the files may be out of date.
+
+If any descriptions have changed, update the affected file(s).
+
+
+STEP 2 — VERIFY THE LAST PROCESSED EPISODE
+--------------------------------------------
+Check the summary file for the most recently processed episode against the RSS
+feed. If its description has been revised since it was saved, update the file.
+
+
+STEP 3 — GENERATE THE TRANSCRIPT FOR THE NEW EPISODE
+------------------------------------------------------
+Run from the parent Podcast Summaries folder:
+  python transcribe_episode.py "path\to\audio.mp3" "[TRANSCRIPT DIR]\[filename].txt"
+
+Use the transcript directory and filename format from Podcast.config.
+
+Requirements (one-time setup):
+  pip install google-genai
+  ffmpeg installed and in PATH (https://ffmpeg.org)
+  GOOGLE_API_KEY environment variable set
+
+If you already have a transcript, save it directly to the Transcripts folder.
+
+
+STEP 4 — READ FORMAT RULES
+----------------------------
+Before writing anything, read Prompts/Description_Format.txt.
+Do not skip this step — format rules vary per podcast.
+
+
+STEP 5 — FOLLOW PODCAST-SPECIFIC STEPS
+----------------------------------------
+Read the podcast's Workflow.txt for any additional steps such as episode type
+identification, voice identification, or show notes search conventions.
+If the podcast's Workflow.txt says "no additional steps", proceed to Step 6.
+
+
+STEP 6 — WRITE THE SUMMARY
+----------------------------
+Write the episode summary following the rules in Description_Format.txt.
+Use the hosts and any relevant details from Podcast.config.
+
+
+STEP 7 — SAVE THE SUMMARY
+---------------------------
+Save to Episode Summaries/ using the file naming format from Podcast.config.
+
+
+STEP 8 — COMMIT AND PUSH
+--------------------------
+Commit all new and updated files and push to GitHub.
+The GitHub repo URL is in Podcast.config.

@@ -80,6 +80,14 @@ def fetch_rss_descriptions(rss_url: str, count: int) -> list[tuple[str, str]]:
     return episodes
 
 
+def read_rss_from_config(podcast_dir: Path) -> str | None:
+    config = podcast_dir / "Podcast.config"
+    if not config.exists():
+        return None
+    match = re.search(r"RSS FEED:\s*(https?://\S+)", config.read_text(encoding="utf-8"))
+    return match.group(1) if match else None
+
+
 def read_rss_from_workflow(podcast_dir: Path) -> str | None:
     workflow = podcast_dir / "Workflow.txt"
     if not workflow.exists():
@@ -119,11 +127,11 @@ def main():
     if not api_key:
         sys.exit("Error: Set the GOOGLE_API_KEY environment variable or pass --api-key.")
 
-    rss_url = args.rss or read_rss_from_workflow(podcast_dir)
+    rss_url = args.rss or read_rss_from_config(podcast_dir) or read_rss_from_workflow(podcast_dir)
     if not rss_url:
         sys.exit(
-            "Error: No RSS URL found. Pass --rss or add it to Workflow.txt as:\n"
-            "  RSS Feed: https://..."
+            "Error: No RSS URL found. Pass --rss or add it to Podcast.config as:\n"
+            "  RSS FEED: https://..."
         )
 
     print(f"Fetching RSS: {rss_url}", flush=True)

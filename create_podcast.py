@@ -36,37 +36,40 @@ def _gitignore():
 """
 
 
-def _workflow(name, folder):
-    title = f"{name.upper()} - EPISODE SUMMARY WORKFLOW"
+def _podcast_config(name, folder):
+    return f"""\
+PODCAST NAME:    {name}
+RSS FEED:        [TODO: add RSS feed URL]
+GITHUB REPO:     [TODO: add GitHub repo URL]
+HOSTS:           [TODO: Host Name (host), Co-host Name (co-host)]
+TRANSCRIPT DIR:  podcasts\\{folder}\\Transcripts
+EPISODE FORMAT:  [TODO: e.g. Episode N - Title  or  ShowCode_NNN_Title]
+FILE FORMAT:     [TODO: e.g. Episode N - Title.txt  or  ShowCode_NNN_Title.txt]
+"""
+
+
+def _workflow(name):
+    title = f"{name.upper()} - PODCAST-SPECIFIC WORKFLOW NOTES"
     sep = "=" * len(title)
     return f"""\
 {title}
 {sep}
 
-IMPORTANT: This workflow is designed to be run from the parent "Podcast Summaries"
-folder, not from within this podcast folder. The shared transcription script lives
-one level up from the podcasts folder. All paths below are relative to that parent.
+Follow the generic Episode_Workflow.txt from the parent Podcast Summaries folder.
+Connection details (RSS URL, GitHub repo, file naming) are in Podcast.config.
 
-RSS Feed: [TODO: add RSS feed URL]
+[TODO: Add any podcast-specific steps here, or replace this block with
+"NO ADDITIONAL STEPS. The generic workflow applies fully to this podcast."
 
-Follow these steps each time a new episode summary is requested:
+Examples of what belongs here:
+  - Episode type identification (e.g. interview vs. solo vs. review)
+  - Voice or presenter identification
+  - Show notes search conventions (e.g. always search BGG for game links)
+  - Filename quirks or naming conventions]
 
-1.  Download the RSS feed — fetch the latest version of [TODO: RSS URL]
-2.  Check the last 3 published episodes — compare their descriptions against
-    anything already saved in Episode Summaries/
-3.  Update any that have changed — overwrite the file if the description differs
-4.  Add the latest episode if missing — save it to Episode Summaries/
-5.  Generate or locate the transcript for the new episode:
-    - To generate from audio, run from the parent Podcast Summaries folder:
-        python transcribe_episode.py "path\\to\\audio.mp3" "podcasts\\{folder}\\Transcripts\\[filename].txt"
-      Requirements: pip install google-genai, ffmpeg in PATH, GOOGLE_API_KEY set
-    - If you already have a transcript, save it directly to Transcripts/
-6.  Read Prompts/Description_Format.txt for layout and style rules before writing
-7.  [TODO: add episode-type identification step if the show has distinct formats]
-8.  Write the description following the rules in Description_Format.txt
-9.  Search for relevant URLs to include in Show Notes
-10. Save to Episode Summaries/
-11. Commit and push to GitHub
+NOTES
+-----
+[TODO: add any recurring notes about this podcast's conventions]
 """
 
 
@@ -191,7 +194,8 @@ def create_podcast(name: str) -> Path:
 
     files = {
         podcast_dir / ".gitignore":                                _gitignore(),
-        podcast_dir / "Workflow.txt":                              _workflow(name, folder_name),
+        podcast_dir / "Podcast.config":                            _podcast_config(name, folder_name),
+        podcast_dir / "Workflow.txt":                              _workflow(name),
         podcast_dir / "Prompts" / "Description_Format.txt":       _description_format(name),
         podcast_dir / "Prompts" / "Episode_Summary_Template.txt": _summary_template(name),
         podcast_dir / "Prompts" / "New_Episode_Summary_Prompt.txt": _summary_prompt(name),
