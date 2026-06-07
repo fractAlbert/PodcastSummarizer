@@ -2,6 +2,8 @@
 
 A shared workspace for managing multiple podcast workflows with Claude Code.
 
+![Podcast Summaries UI](assets/screenshots.png)
+
 ---
 
 ## Introduction
