@@ -44,20 +44,38 @@ Requirements (one-time setup):
 If you already have a transcript, save it directly to the Transcripts folder.
 
 
-STEP 4 — READ FORMAT RULES
+STEP 4 — REVIEW THE TRANSCRIPT
+--------------------------------
+Read through the transcript and flag two types of problems:
+
+1. Repeated content: passages where the same idea, sentence, or paragraph appears
+   more than once in sequence. This can happen due to recording or editing errors
+   and the repeated section should be removed. The wording may not be identical —
+   look for the same point being made twice in a row.
+
+2. Editing comments left in: statements that sound like production notes rather
+   than spoken content, such as "should we cut this?", "leave that out", or
+   "we can edit this part". These should be removed from the transcript.
+
+If you find either type, create a brief summary of the issues found, including a
+timestamp for each one. Then remove the offending text, save the corrected transcript,
+and proceed.
+
+
+STEP 5 — READ FORMAT RULES
 ----------------------------
 Before writing anything, read Prompts/Description_Format.txt.
 Do not skip this step — format rules vary per podcast.
 
 
-STEP 5 — FOLLOW PODCAST-SPECIFIC STEPS
+STEP 6 — FOLLOW PODCAST-SPECIFIC STEPS
 ----------------------------------------
 Read the podcast's Workflow.txt for any additional steps such as episode type
 identification, voice identification, or show notes search conventions.
-If the podcast's Workflow.txt says "no additional steps", proceed to Step 6.
+If the podcast's Workflow.txt says "no additional steps", proceed to Step 7.
 
 
-STEP 6 — WRITE THE SUMMARY
+STEP 7 — WRITE THE SUMMARY
 ----------------------------
 Before writing, read 3–5 recent episode summaries from Episode Summaries/ to
 calibrate tone, length, and level of detail. The goal is to match what is already
@@ -67,12 +85,12 @@ Then write the episode summary following the rules in Description_Format.txt.
 Use the hosts and any relevant details from Podcast.config.
 
 
-STEP 7 — SAVE THE SUMMARY
+STEP 8 — SAVE THE SUMMARY
 ---------------------------
 Save to Episode Summaries/ using the file naming format from Podcast.config.
 
 
-STEP 8 — COMMIT AND PUSH
+STEP 9 — COMMIT AND PUSH
 --------------------------
 Commit all new and updated files and push to GitHub.
 The GitHub repo URL is in Podcast.config.
