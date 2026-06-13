@@ -140,7 +140,7 @@ def stitch(transcripts: list[str]) -> str:
     result = transcripts[0]
 
     for curr in transcripts[1:]:
-        window = 400
+        window = 800
         tail = result[-window:]
         head = curr[:window]
 
