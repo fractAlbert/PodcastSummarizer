@@ -3,8 +3,14 @@
 Podcast Transcription Script
 
 Splits an audio file into overlapping chunks, transcribes each chunk using the
-Google Gemini API, stitches the results into a single transcript, and removes
-the temporary audio fragments when done.
+Google Gemini API, stitches the results into a single transcript, and saves
+the chunk files for review.
+
+Chunks are kept in a {output_stem}_chunks/ folder next to the transcript so
+individual chunks can be re-transcribed if needed. To redo a single chunk:
+  1. Delete its .txt file from the _chunks/ folder.
+  2. Re-run the script with the same arguments.
+  3. Only missing .txt files will be re-transcribed; all are then re-stitched.
 
 Requirements:
     pip install google-genai
@@ -27,7 +33,6 @@ import sys
 import time
 import argparse
 import subprocess
-import tempfile
 from pathlib import Path
 
 from google import genai
@@ -193,25 +198,32 @@ def main():
 
     client = genai.Client(api_key=api_key)
 
+    chunk_dir = output_path.parent / (output_path.stem + "_chunks")
+    chunk_dir.mkdir(parents=True, exist_ok=True)
+
     print(f"Audio:  {audio_path.name}")
     print(f"Output: {output_path}")
+    print(f"Chunks: {chunk_dir}")
 
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp_dir = Path(tmp)
+    print("Splitting audio into chunks...")
+    chunks, duration = split_audio(audio_path, chunk_dir)
+    print(
+        f"Duration: {duration / 60:.1f} min  ->  {len(chunks)} chunk(s) "
+        f"of ~{CHUNK_MINUTES} min each (with {OVERLAP_SECONDS}s overlap)"
+    )
 
-        print("Splitting audio into chunks...")
-        chunks, duration = split_audio(audio_path, tmp_dir)
-        print(
-            f"Duration: {duration / 60:.1f} min  ->  {len(chunks)} chunk(s) "
-            f"of ~{CHUNK_MINUTES} min each (with {OVERLAP_SECONDS}s overlap)"
-        )
-
-        transcripts = []
-        for i, (chunk_path, start_sec, _) in enumerate(chunks, 1):
+    transcripts = []
+    for i, (chunk_path, start_sec, _) in enumerate(chunks, 1):
+        chunk_txt = chunk_path.with_suffix(".txt")
+        if chunk_txt.exists():
+            print(f"  [skip] Chunk {i}/{len(chunks)} (transcript already exists)", flush=True)
+            t = chunk_txt.read_text(encoding="utf-8")
+        else:
             t = transcribe_chunk(client, args.model, chunk_path, i, len(chunks))
             t = deduplicate_chunk(t)
-            transcripts.append(t)
+            chunk_txt.write_text(t, encoding="utf-8")
             print(f"  Chunk {i} complete.", flush=True)
+        transcripts.append(t)
 
     print("Stitching transcript...", flush=True)
     full_transcript = stitch(transcripts)
@@ -219,6 +231,8 @@ def main():
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(full_transcript, encoding="utf-8")
     print(f"\nDone. Transcript saved to:\n  {output_path}")
+    print(f"Chunks kept in:        {chunk_dir}")
+    print("To redo a chunk: delete its .txt from the chunks folder and re-run.")
 
 
 if __name__ == "__main__":
