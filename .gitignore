@@ -1,6 +1,9 @@
 # Each podcast folder is its own independent git repo
 podcasts/
 
+# Temporary chunk files from transcription
+chunks/
+
 # Audio files
 *.mp3
 *.m4a

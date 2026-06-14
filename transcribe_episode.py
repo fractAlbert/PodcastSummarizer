@@ -215,7 +215,8 @@ def main():
 
     client = genai.Client(api_key=api_key)
 
-    chunk_dir = output_path.parent / (output_path.stem + "_chunks")
+    repo_root = Path(__file__).parent
+    chunk_dir = repo_root / "chunks" / output_path.stem
     chunk_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Audio:  {audio_path.name}")
