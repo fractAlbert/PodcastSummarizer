@@ -12,6 +12,12 @@ individual chunks can be re-transcribed if needed. To redo a single chunk:
   2. Re-run the script with the same arguments.
   3. Only missing .txt files will be re-transcribed; all are then re-stitched.
 
+Only replace a chunk when it is genuinely unusable — e.g. the same sentence
+repeating hundreds of times (a Gemini hallucination loop). Small duplicate
+passages near chunk boundaries are normal stitching artifacts and can stay.
+If a chunk cannot be recovered, replace its .txt with a placeholder note:
+  [SEGMENT UNAVAILABLE — transcription failed (approx. minutes X–Y)]
+
 Requirements:
     pip install google-genai
     ffmpeg installed and available in PATH  (https://ffmpeg.org)
@@ -29,6 +35,7 @@ API Key:
 
 import json
 import os
+import re
 import sys
 import time
 import argparse
@@ -124,6 +131,16 @@ def transcribe_chunk(client, model_name: str, chunk_path: Path, num: int, total:
 
     client.files.delete(name=uploaded.name)
     return response.text
+
+
+def adjust_timestamps(text: str, offset_sec: float) -> str:
+    """Shift [HH:MM:SS] timestamps by offset_sec to reflect position in full episode."""
+    def shift(m):
+        total = int(m.group(1)) * 3600 + int(m.group(2)) * 60 + int(m.group(3)) + round(offset_sec)
+        h, remainder = divmod(total, 3600)
+        mn, s = divmod(remainder, 60)
+        return f"[{h:02d}:{mn:02d}:{s:02d}]"
+    return re.sub(r'\[(\d{2}):(\d{2}):(\d{2})\]', shift, text)
 
 
 def deduplicate_chunk(text: str, window: int = 6) -> str:
@@ -223,7 +240,7 @@ def main():
             t = deduplicate_chunk(t)
             chunk_txt.write_text(t, encoding="utf-8")
             print(f"  Chunk {i} complete.", flush=True)
-        transcripts.append(t)
+        transcripts.append(adjust_timestamps(t, start_sec))
 
     print("Stitching transcript...", flush=True)
     full_transcript = stitch(transcripts)
