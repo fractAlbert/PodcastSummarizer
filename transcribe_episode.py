@@ -45,7 +45,7 @@ from pathlib import Path
 from google import genai
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-CHUNK_MINUTES = 12
+CHUNK_MINUTES = 8
 OVERLAP_SECONDS = 30
 MODEL = "gemini-2.5-flash-lite"
 
