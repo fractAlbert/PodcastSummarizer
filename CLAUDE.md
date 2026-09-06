@@ -47,6 +47,10 @@ Set-Content -Path $chunkPath -Value $clean -Encoding UTF8 -NoNewline
 ```
 Then delete the stitched output file and re-run `transcribe_episode.py`. It re-stitches from cached chunks without re-calling the API.
 
+## Guest Database (ESA)
+
+`podcasts/ESA/guests.csv` tracks every ESA guest with canonical name, title, organization, episode numbers, and links. Before writing the Guests section of any ESA summary, read this file. Use the canonical name spelling from the database rather than the transcript. See `podcasts/ESA/Workflow.txt` for the full lookup and update procedure.
+
 ## Rules
 
 ### Cross-episode references
