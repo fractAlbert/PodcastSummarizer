@@ -145,6 +145,8 @@ def adjust_timestamps(text: str, offset_sec: float) -> str:
 
 def deduplicate_chunk(text: str, window: int = 6) -> str:
     """Truncate a chunk at the point where a repeating line sequence begins."""
+    if not text:
+        return ""
     lines = text.splitlines()
     for i in range(len(lines) - window):
         seq = lines[i:i + window]
@@ -238,6 +240,11 @@ def main():
             t = chunk_txt.read_text(encoding="utf-8")
         else:
             t = transcribe_chunk(client, args.model, chunk_path, i, len(chunks))
+            if not t:
+                raise RuntimeError(
+                    f"Chunk {i}/{len(chunks)} returned empty or None from API. "
+                    f"Re-run to retry (chunk mp3 is preserved)."
+                )
             t = deduplicate_chunk(t)
             chunk_txt.write_text(t, encoding="utf-8")
             print(f"  Chunk {i} complete.", flush=True)
