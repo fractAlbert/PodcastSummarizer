@@ -250,6 +250,22 @@ def main():
             print(f"  Chunk {i} complete.", flush=True)
         transcripts.append(adjust_timestamps(t, start_sec))
 
+    # Flag chunks that are suspiciously large vs. their siblings.
+    # Timestamp-shifting hallucinations produce no long single lines but do
+    # bloat the chunk file to 2–3× normal size — catch them here.
+    chunk_sizes = [(i, chunk_path.with_suffix(".txt").stat().st_size)
+                   for i, (chunk_path, _, _) in enumerate(chunks, 1)]
+    if len(chunk_sizes) > 1:
+        avg_kb = sum(s for _, s in chunk_sizes) / len(chunk_sizes) / 1024
+        for i, size in chunk_sizes:
+            kb = size / 1024
+            if kb > avg_kb * 2:
+                print(
+                    f"  WARNING: Chunk {i} is {kb:.1f} KB"
+                    f" (avg {avg_kb:.1f} KB) — inspect for hallucination loop",
+                    flush=True,
+                )
+
     print("Stitching transcript...", flush=True)
     full_transcript = stitch(transcripts)
 
