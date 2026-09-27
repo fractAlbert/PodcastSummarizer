@@ -9,6 +9,8 @@ This is the parent repository. Each podcast lives in its own sub-repository unde
 
 Commits and pushes for episode files (transcripts, summaries) go to the **sub-repository**, not the parent.
 
+All changes, in the parent and every sub-repository, go through a pull request. Never push directly to `master` or `main`. Use the `/push` procedure: new branch, commit, push the branch, open a PR, and the user merges it.
+
 ## Episode Workflow
 
 Read `Episode_Workflow.txt` for the full step-by-step process. Read the podcast's `Podcast.config` and `Workflow.txt` for podcast-specific settings (RSS URL, GitHub repo, file naming).
