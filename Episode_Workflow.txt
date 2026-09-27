@@ -16,7 +16,7 @@ STEP 1 — SYNC EXISTING SUMMARIES FROM RSS FEED
 ------------------------------------------------
 Fetch the RSS feed URL from Podcast.config.
 
-Compare the descriptions for the last three published episodes against the
+Compare the descriptions for the last five published episodes against the
 corresponding files in the Episode Summaries folder. Descriptions are sometimes
 edited during publishing and the files may be out of date.
 

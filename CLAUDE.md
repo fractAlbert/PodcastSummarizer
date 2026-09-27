@@ -51,6 +51,8 @@ Then delete the stitched output file and re-run `transcribe_episode.py`. It re-s
 
 `podcasts/ESA/guests.csv` tracks every ESA guest with canonical name, title, organization, episode numbers, and links. Before writing the Guests section of any ESA summary, read this file. Use the canonical name spelling from the database rather than the transcript. See `podcasts/ESA/Workflow.txt` for the full lookup and update procedure.
 
+`podcasts/ESA/appearances.csv` indexes each guest by the episode they appeared in. During the RSS sync, compare each published guest name against that episode's appearance rows, never by name alone. Similar names can be different people, so a rename that would collide with another row is marked `review` and confirmed with the user, never merged automatically.
+
 ## Rules
 
 ### Cross-episode references
