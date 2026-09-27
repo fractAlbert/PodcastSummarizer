@@ -90,7 +90,16 @@ STEP 8 — SAVE THE SUMMARY
 Save to Episode Summaries/ using the file naming format from Podcast.config.
 
 
-STEP 9 — COMMIT AND PUSH
---------------------------
-Commit all new and updated files and push to GitHub.
+STEP 9 — COMMIT AND OPEN A PULL REQUEST
+-----------------------------------------
+All changes go through a pull request. Never push directly to the default
+branch (master for ESA, main for 1 Player Podcast).
+
+Follow the /push procedure (~/.claude/skills/push/SKILL.md): put the changes on
+a new branch named for the episode (e.g. esa-126-all-about-the-heat), commit,
+push the branch, and open a PR into the default branch. The user merges it.
+
+Keep the RSS sync (Steps 1-2) and the new episode as separate commits on the
+same branch, so the PR shows each piece of work on its own.
+
 The GitHub repo URL is in Podcast.config.
